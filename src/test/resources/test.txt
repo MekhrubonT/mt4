@@ -1,0 +1,23 @@
+number -> '\d+';
+plus -> 'p';
+factor -> 'f';
+
+main {
+    s;
+}
+
+s {
+    number sp;
+}
+sp {
+    ;
+    plus number sp;
+}
+
+f {
+    number fp;
+}
+fp {
+    ;
+    factor number fp;
+}
