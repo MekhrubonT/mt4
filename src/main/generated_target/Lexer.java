@@ -1,5 +1,3 @@
-import kotlin.Pair;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,6 +14,23 @@ public class Lexer {
     private String currentToken;
     private String tokenValue;
 
+    class Pair<T, R> {
+        final private T first;
+        final private R second;
+
+        public Pair(T first, R second) {
+            this.first = first;
+            this.second = second;
+        }
+
+        public T getFirst() {
+            return first;
+        }
+
+        public R getSecond() {
+            return second;
+        }
+    }
 
     public String getTokenValue() {
         return tokenValue;

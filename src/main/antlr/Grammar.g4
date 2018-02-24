@@ -18,11 +18,6 @@ rule_helper: (rule_name WS*)*;
 
 parse_rule: rule_name WS* '{' WS* (rule_helper ';'WS*)* WS*'}' WS*;
 
-asjkdhasd : (A | AA)*;
-
-A : 'Var';
-AA : 'Vara';
-
 LETTER: 'A'..'Z' | 'a'..'z';
 DIGIT: '0'..'9';
 PLUS: '+';
