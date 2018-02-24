@@ -4,7 +4,6 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.TokenStream;
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
 import java.io.IOException;
@@ -12,14 +11,26 @@ import java.io.InputStream;
 import java.io.Serializable;
 import java.util.*;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 public class InputGrammar implements Serializable {
+    private static final long serialVersionUID = 6473407033512582688L;
+
     public static final String DOLLAR = "$";
     public static final String EPS = "";
 
     private final Map<String, SerializableParseTree> lexerRules, parserRules;
-    private final Map<String, Integer> lexerRulesInd, parserRulesInd;
+    private final Map<String, Set<String>> first, follow;
+
+    public static InputGrammar getParser(String grammarPath) throws IOException {
+        try {
+            return (InputGrammar) GenerateParser.restoreObject(grammarPath);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException("Parser data is broken");
+        }
+    }
+
 
     public Map<String, SerializableParseTree> getLexerRules() {
         return Collections.unmodifiableMap(lexerRules);
@@ -27,14 +38,6 @@ public class InputGrammar implements Serializable {
 
     public Map<String, SerializableParseTree> getParserRules() {
         return Collections.unmodifiableMap(parserRules);
-    }
-
-    private final Map<String, Boolean> acceptsEps;
-
-    private final Map<String, Set<String>> first, follow;
-
-    public Map<String, Integer> getLexerRulesInd() {
-        return Collections.unmodifiableMap(lexerRulesInd);
     }
 
     public Map<String, Set<String>> getFollow() {
@@ -53,38 +56,31 @@ public class InputGrammar implements Serializable {
         lexerRules = grammarListener.lexerRules;
         parserRules = grammarListener.parserRules;
 
-        lexerRulesInd = new HashMap<>();
-        parserRulesInd = new HashMap<>();
-        numerate(lexerRules, lexerRulesInd);
-        numerate(parserRules, parserRulesInd);
-
         if (!parserRules.containsKey("main")) {
             throw new RuntimeException("Starting rule should be called main");
         }
 
-        acceptsEps = new HashMap<>();
-        lexerRules.forEach((key, value) -> {
-            System.out.println(value.getText());
-            acceptsEps.put(key, Pattern.matches(value.getText(), ""));
-        });
-
         first = new HashMap<>();
         follow = new HashMap<>();
-        parserRules.keySet().forEach(name -> {
+        Consumer<Map<String, SerializableParseTree>> addRulesToFirstAndFollow = rules -> rules.keySet().forEach(name -> {
             first.put(name, new HashSet<>());
             follow.put(name, new HashSet<>());
         });
 
+        addRulesToFirstAndFollow.accept(parserRules);
+        addRulesToFirstAndFollow.accept(lexerRules);
+
+        lexerRules.forEach((key, value) -> {
+            System.out.println(value.getText());
+            first.get(key).add(key);
+            if (Pattern.matches(value.getText(), "")) {
+                first.get(key).add(EPS);
+            }
+        });
+
+
         computeFirst();
         computeFollow();
-    }
-
-    private void numerate(Map<String, SerializableParseTree> parserRules, Map<String, Integer> parserRulesInd) {
-        int ind = 0;
-        for (String s : parserRules.keySet()) {
-            parserRulesInd.put(s, ind);
-            ind++;
-        }
     }
 
     private void computeFirst() {
@@ -93,7 +89,7 @@ public class InputGrammar implements Serializable {
 
     private void computeFollow() {
         follow.get("main").add(DOLLAR);
-        repeatIfChanged((key, child) -> updateFollowWithSubRule(child));
+        repeatIfChanged((key, child) -> updateFollowWithSubRule(child, key));
     }
 
     private void repeatIfChanged(BiFunction<String, SerializableParseTree, Boolean> hasChanged) {
@@ -116,50 +112,43 @@ public class InputGrammar implements Serializable {
     }
 
     private Set<String> updateFirstWithSubRule(SerializableParseTree child) {
-        Set<String> firsts = new HashSet<>();
+        Set<String> firsts = new HashSet<>(Collections.singleton(EPS));
         boolean haveEps = true;
-        for (int i = 0; haveEps && i < child.getChildCount(); i += 2) {
+        for (int i = 0; haveEps && i < child.getChildCount(); i++) {
             SerializableParseTree lexerOrParserRule = child.getChild(i);
-            String repeatSign = child.getChild(i + 1).getText();
             String ruleName = lexerOrParserRule.getText();
 
-            if (lexerRules.containsKey(ruleName)) {
-                firsts.add(ruleName);
-                haveEps = acceptsEps.get(ruleName);
-            } else {
-                firsts.addAll(first.get(ruleName));
-                haveEps = first.get(ruleName).contains(EPS);
-            }
 
-            haveEps = haveEps || !"+".equals(repeatSign);
+            firsts.addAll(first.get(ruleName));
+            haveEps = first.get(ruleName).contains(EPS);
         }
-        if (haveEps) {
-            firsts.add(EPS);
+        if (!haveEps) {
+            firsts.remove(EPS);
         }
         return firsts;
     }
 
-    private boolean updateFollowWithSubRule(SerializableParseTree rule) {
+    private boolean updateFollowWithSubRule(SerializableParseTree rule, String parentRule) {
         boolean changed = false;
-        for (int i = 0; i < rule.getChildCount(); i += 2) {
+        for (int i = 0; i < rule.getChildCount(); i++) {
             String key = rule.getChild(i).getText();
             if (!parserRules.containsKey(key)) {
                 continue;
             }
             boolean haveEps = true;
-            for (int k = i + 2; haveEps && k < rule.getChildCount(); k += 2) {
-                SerializableParseTree relax = rule.getChild(k);
-                String repeatSign = rule.getChild(k + 1).getText();
+            if (i + 1 < rule.getChildCount()) {
+                SerializableParseTree relax = rule.getChild(i + 1);
                 String relaxText = relax.getText();
 
-                if (lexerRules.containsKey(relaxText)) {
-                    changed = changed || follow.get(key).add(relaxText);
-                    haveEps = acceptsEps.get(relaxText);
-                } else {
-                    changed = changed || follow.get(key).addAll(first.get(relaxText));
-                    haveEps = first.get(relaxText).contains(EPS);
+                int oldSize = follow.get(key).size();
+                follow.get(key).addAll(first.get(relaxText));
+                if (first.get(relaxText).contains(EPS)) {
+                    follow.get(key).remove(EPS);
+                    follow.get(key).addAll(follow.get(relaxText));
                 }
-                haveEps = haveEps || !"+".equals(repeatSign);
+                changed = changed || follow.get(key).size() != oldSize;
+            } else {
+                changed = changed || follow.get(key).addAll(follow.get(parentRule));
             }
         }
         return changed;

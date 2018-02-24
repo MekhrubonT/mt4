@@ -78,16 +78,6 @@ public interface GrammarListener extends ParseTreeListener {
 	 */
 	void exitRule_helper(GrammarParser.Rule_helperContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link GrammarParser#repeat_amount}.
-	 * @param ctx the parse tree
-	 */
-	void enterRepeat_amount(GrammarParser.Repeat_amountContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link GrammarParser#repeat_amount}.
-	 * @param ctx the parse tree
-	 */
-	void exitRepeat_amount(GrammarParser.Repeat_amountContext ctx);
-	/**
 	 * Enter a parse tree produced by {@link GrammarParser#parse_rule}.
 	 * @param ctx the parse tree
 	 */

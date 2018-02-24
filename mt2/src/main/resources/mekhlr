@@ -1,0 +1,42 @@
+var -> 'var';
+variableName -> '\w(\w|\d)*';
+comma -> ',';
+colon -> ':';
+semicolon -> ';';
+space -> '\s';
+
+main {
+    spacesOrNot var spaces typeGroup;
+}
+
+typeGroup {
+    typeGroupSingle typeGroupTail;
+}
+typeGroupSingle {
+    variables colon spaces type semicolon spaces;
+}
+typeGroupTail {
+    typeGroupSingle typeGroupTail;
+    ;
+}
+
+variables {
+    variableName spaces variablesP;
+}
+
+variablesP {
+    comma spaces variableName spaces variablesP;
+    ;
+}
+
+type {
+    variableName spaces;
+}
+
+spacesOrNot {
+    space spacesOrNot;
+    ;
+}
+spaces {
+    spacesOrNot;
+}

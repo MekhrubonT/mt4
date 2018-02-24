@@ -13,9 +13,15 @@ repositories {
 
 dependencies {
     antlr "org.antlr:antlr4:4.5.3"
-    testCompile group: 'junit', name: 'junit', version: '4.12'
     compile "org.antlr:antlr4-runtime:4.7"
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.1'
+}
+dependencies {
+    testCompile group: 'org.hamcrest', name: 'hamcrest-core', version: '1.3'
+    testCompile group: 'junit', name: 'junit-dep', version: '4.10'
+    testCompile group: 'org.hamcrest', name: 'hamcrest-library', version: '1.3'
+    testCompile group: 'org.mockito', name: 'mockito-core', version: '1.9.+'
 }
 
 generateGrammarSource {
@@ -54,3 +60,4 @@ compileTestKotlin {
         jvmTarget = "1.8"
     }
 }
+

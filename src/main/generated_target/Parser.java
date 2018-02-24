@@ -8,11 +8,9 @@ import java.util.Map;
 import java.util.Set;
 
 public class Parser {
-    public static final String DOLLAR = "$";
-    public static final String EPS = "";
+    private static final String EPS = "";
     private static final ResultTree[] EMPTY_RESULT_TREE_ARRAY = new ResultTree[0];
 
-    private final InputGrammar inputGrammar;
     private final Lexer stream;
     private final Map<String, SerializableParseTree> parserRules;
     private final Map<String, SerializableParseTree> lexerRules;
@@ -21,42 +19,39 @@ public class Parser {
 
     public Parser(Lexer stream, InputGrammar inputGrammar) {
         this.stream = stream;
-        this.inputGrammar = inputGrammar;
         this.parserRules = inputGrammar.getParserRules();
         this.lexerRules = inputGrammar.getLexerRules();
         first = inputGrammar.getFirst();
         follow = inputGrammar.getFollow();
     }
 
-    public ResultTree parse() throws Exception {
+    public ResultTree parse() {
         return start("main");
     }
 
 
     // first.get(currentRule).contains(nextToken()) == true
-    private ResultTree start(String currentRule) throws Exception {
-        String token = stream.currentToken();
+    private ResultTree start(String currentRule) {
         SerializableParseTree parseTree = parserRules.get(currentRule);
-
-        SerializableParseTree chosenSubRule = chooseRule(parseTree, token);
+        SerializableParseTree chosenSubRule = chooseRule(parseTree, stream.getCurrentToken());
         List<ResultTree> resultChildren = new ArrayList<>();
         for (int i = 0; i < chosenSubRule.getChildCount(); i++) {
             SerializableParseTree child = chosenSubRule.getChild(i);
             String text = child.getText();
             if (lexerRules.containsKey(text)) {
-                if (text.equals(token)) {
-                    resultChildren.add(new TerminalResultTree(stream.tokenValue));
+                if (text.equals(stream.getCurrentToken())) {
+                    resultChildren.add(new TerminalResultTree(stream.getTokenValue()));
                     stream.nextToken();
                 } else {
-                    throw new RuntimeException("Input mismatched: expected " + token + ", found " + text);
+                    throw new RuntimeException("Input mismatched: expected " + text + ", found " + stream.getCurrentToken());
                 }
             } else {
-                if (first.get(text).contains(token)) {
+                if (first.get(text).contains(stream.getCurrentToken())) {
                     resultChildren.add(start(text));
-                } else if (!first.containsKey(EPS)) {
-                    throw new RuntimeException("Input missmatched: expected " + token);
+                } else if (!first.get(text).contains(EPS)) {
+                    throw new RuntimeException("Input rule " + text + ": found " + stream.getCurrentToken());
                 } else {
-                    resultChildren.add(new RuleResultTree(token, EMPTY_RESULT_TREE_ARRAY));
+                    resultChildren.add(new RuleResultTree(text, EMPTY_RESULT_TREE_ARRAY));
                 }
             }
         }
@@ -64,17 +59,22 @@ public class Parser {
     }
 
     private SerializableParseTree chooseRule(SerializableParseTree parseTree, String nextToken) {
+        String currentRule = parseTree.getChild(0).getText();
         for (int i = 0; i < parseTree.getChildCount(); i++) {
             SerializableParseTree child = parseTree.getChild(i);
-            if (child.isRuleHelper() && child.getChildCount() > 0) {
-                SerializableParseTree firstRule = child.getChild(0);
-                String text = firstRule.getText();
+            if (child.isRuleHelper()) {
+                if (child.getChildCount() > 0) {
+                    SerializableParseTree firstRule = child.getChild(0);
+                    String text = firstRule.getText();
 
-                if (lexerRules.containsKey(text)) {
-                    if (text.equals(nextToken)) {
+                    if (lexerRules.containsKey(text)) {
+                        if (text.equals(nextToken)) {
+                            return child;
+                        }
+                    } else if (first.get(text).contains(nextToken) || (first.get(text).contains(EPS) && follow.get(text).contains(nextToken))) {
                         return child;
                     }
-                } else if (first.get(text).contains(nextToken) || (first.get(text).contains(EPS) && follow.get(text).contains(nextToken))) {
+                } else if (first.get(currentRule).contains(EPS) && follow.get(currentRule).contains(nextToken)) {
                     return child;
                 }
             }

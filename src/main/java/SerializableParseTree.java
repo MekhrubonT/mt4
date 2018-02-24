@@ -1,6 +1,5 @@
 import antlr.generated.GrammarParser;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 
 import java.io.Serializable;
@@ -9,6 +8,8 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public class SerializableParseTree implements Serializable {
+    private static final long serialVersionUID = 5753798495360374298L;
+
     private final String text;
     private final SerializableParseTree[] children;
     private final boolean ruleHelper;

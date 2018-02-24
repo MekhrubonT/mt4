@@ -3,12 +3,12 @@ import antlr.generated.GrammarParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.NavigableSet;
 
 public class MyGrammarListener extends GrammarBaseListener {
     Map<String, SerializableParseTree> parserRules = new HashMap<>();
-    Map<String, SerializableParseTree> lexerRules = new HashMap<>();
+    Map<String, SerializableParseTree> lexerRules = new LinkedHashMap<>();
 
     private void add(String name, ParseTree ctx, Map<String, SerializableParseTree> cur, Map<String, SerializableParseTree> oth) {
         if (cur.put(name, new SerializableParseTree(ctx)) != null) {

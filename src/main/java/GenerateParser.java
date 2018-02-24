@@ -14,9 +14,9 @@ public class GenerateParser {
                 args[1]);
     }
 
-    final InputGrammar grammar;
+    private final InputGrammar grammar;
 
-    private GenerateParser(FileInputStream fileInputStream, String generatedFilesDir) throws IOException {
+    public GenerateParser(FileInputStream fileInputStream, String generatedFilesDir) throws IOException {
         Path generated = Paths.get(generatedFilesDir);
         Files.createDirectories(generated);
         grammar = InputGrammar.parseGrammar(fileInputStream);
@@ -26,23 +26,23 @@ public class GenerateParser {
         generateParserInit(generated);
     }
 
-    static final String myLexer = "import java.io.IOException;\n" +
+    private static final String myLexer = "import java.io.IOException;\n" +
             "import java.io.InputStream;\n" +
             "\n" +
             "public class MyGrammarLexer extends Lexer {\n" +
             "    public static final String GRAMMAR_PATH = \"%s\";\n" +
             "\n" +
-            "    public MyGrammarLexer(InputStream stream) throws IOException, ClassNotFoundException {\n" +
-            "        super(stream, (InputGrammar) GenerateParser.restoreObject(GRAMMAR_PATH));\n" +
+            "    public MyGrammarLexer(InputStream stream) throws IOException {\n" +
+            "        super(stream, InputGrammar.getParser(GRAMMAR_PATH));\n" +
             "    }\n" +
             "}\n";
-    static final String myParser = "import java.io.IOException;\n" +
+    private static final String myParser = "import java.io.IOException;\n" +
             "\n" +
             "public class MyGrammarParser extends Parser {\n" +
             "    public static final String GRAMMAR_PATH = \"%s\";\n" +
             "\n" +
-            "    public MyGrammarParser(MyGrammarLexer lexer) throws IOException, ClassNotFoundException {\n" +
-            "        super(lexer, (InputGrammar) GenerateParser.restoreObject(GRAMMAR_PATH));\n" +
+            "    public MyGrammarParser(MyGrammarLexer lexer) throws IOException {\n" +
+            "        super(lexer, InputGrammar.getParser(GRAMMAR_PATH));\n" +
             "    }\n" +
             "}\n";
 
@@ -61,7 +61,7 @@ public class GenerateParser {
 
     }
 
-    public static void saveObject(Object obj, Path path) throws IOException {
+    private static void saveObject(Object obj, Path path) throws IOException {
         try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(path.toString()))) {
             out.writeObject(obj);
         }

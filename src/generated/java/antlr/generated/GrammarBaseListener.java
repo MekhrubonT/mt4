@@ -100,18 +100,6 @@ public class GrammarBaseListener implements GrammarListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterRepeat_amount(GrammarParser.Repeat_amountContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitRepeat_amount(GrammarParser.Repeat_amountContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterParse_rule(GrammarParser.Parse_ruleContext ctx) { }
 	/**
 	 * {@inheritDoc}

@@ -1,45 +1,37 @@
-import kotlin.text.*;
+import kotlin.Pair;
 
-import java.io.*;
-import java.util.*;
-import java.util.logging.Logger;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class Lexer {
-    public static final Logger LOG = Logger.getLogger(Lexer.class.getName());
-    public static final int EOF = -1;
-    private final Iterator<MatchResult> textMatches;
-    private final String[] tokenName;
-    int groupToInteger[];
-    public int tokenInd;
-    public Integer tokenStart;
-    public String tokenValue;
+    private int curPos;
+    private final String text;
+    private final List<Pair<String, Matcher>> lexerRules;
+    private String currentToken;
+    private String tokenValue;
 
 
-    public String currentToken() {
-        return tokenInd == -1 ? "" : tokenName[tokenInd];
+    public String getTokenValue() {
+        return tokenValue;
+    }
+
+    public String getCurrentToken() {
+        return currentToken;
     }
 
     public Lexer(InputStream stream, InputGrammar parser) throws IOException {
-        final String text = readAll(stream);
-        Map<String, SerializableParseTree> lexerRules = parser.getLexerRules();
-        Map<String, Integer> lexerRulesInd = parser.getLexerRulesInd();
-        groupToInteger= new int[lexerRules.size() + 1];
-        tokenName = new String[lexerRules.size() + 1];
-        int pos[] = new int[1];
-
-        String regexpChecker = lexerRules.entrySet().stream().map(entry -> {
-            Integer ind = lexerRulesInd.get(entry.getKey());
-            groupToInteger[pos[0]++] = ind;
-            tokenName[ind] = entry.getKey();
-            return "(" + entry.getValue().getText() + ")";
-        }).collect(Collectors.joining("|")) + "|(.+)";
-
-        groupToInteger[lexerRules.size()] = lexerRules.size();
-        tokenName[lexerRules.size()] = "EOF";
-
-        textMatches = new Regex(regexpChecker).findAll(text, 0).iterator();
-        iterateToNext();
+        text = readAll(stream);
+        lexerRules = parser.getLexerRules().entrySet().stream()
+                .map(entry -> new Pair<>(entry.getKey(), Pattern.compile(entry.getValue().getText()).matcher(text)))
+                .collect(Collectors.toList());
+        curPos = 0;
+        nextToken();
     }
 
     private String readAll(InputStream stream) throws IOException {
@@ -49,33 +41,30 @@ public class Lexer {
         while ((len = stream.read(buff)) != -1) {
             result.write(buff, 0, len);
         }
-        return result.toString(String.valueOf(Charsets.UTF_8));
+        return result.toString(String.valueOf(StandardCharsets.UTF_8));
     }
 
 
-    public void nextToken() throws Exception {
-        iterateToNext();
-    }
+    public String nextToken() {
+        if (curPos == text.length()) {
+            return currentToken = tokenValue = InputGrammar.DOLLAR;
+        }
 
-    private void iterateToNext() {
-        if (textMatches.hasNext()) {
-            MatchResult next = textMatches.next();
-            MatchGroupCollection groups = next.getGroups();
-            for (int i = 0; i < groups.size(); i++) {
-                MatchGroup group = groups.get(i);
-                if (group != null) {
-                    if (i == groups.size() - 1) {
-                        throw new RuntimeException("Bad group");
-                    }
-                    tokenInd = groupToInteger[i];
-                    tokenStart = group.getRange().getStart();
-                    tokenValue = group.getValue();
+        currentToken = "";
+        int nextPos = curPos;
 
-                    return;
-                }
+        for (Pair<String, Matcher> lexem : lexerRules) {
+            Matcher matcher = lexem.getSecond();
+            if (matcher.find(curPos) && matcher.start() == curPos && matcher.end() > nextPos) {
+                nextPos = matcher.end();
+                currentToken = lexem.getFirst();
+                tokenValue = text.substring(curPos, nextPos);
             }
         }
-        tokenInd = EOF;
-        tokenValue = null;
+        if (nextPos == curPos) {
+            throw new RuntimeException("Can't parse, no lexer rule is suitable");
+        }
+        curPos = nextPos;
+        return currentToken;
     }
 }

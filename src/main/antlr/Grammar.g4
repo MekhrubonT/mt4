@@ -5,27 +5,33 @@ input_grammar: lexer_rule+ parse_rule+ EOF;
 
 rule_name: LETTER+;
 
-lexer_rule: rule_name WS* '->' WS* '\'' regexp '\'' ';' WS*;
+lexer_rule: rule_name WS* '->' WS* '\'' regexp '\'' SEMICOLON WS*;
 
 regexp: unit* ('|' unit*)*;
 
-unit: (text | '(' regexp ')') repeat_amount;
+unit: (text | '(' regexp ')');
 
-text: (LETTER | DIGIT | PLUS | FACTOR | QWE)+;
+text: (LETTER | DIGIT | PLUS | FACTOR | QWE | COMMA | COLON | SEMICOLON)+;
 
-rule_helper: (rule_name WS* repeat_amount)*;
+rule_helper: (rule_name WS*)*;
 
-repeat_amount: CLOSURE | '?' | '+' |;
 
 parse_rule: rule_name WS* '{' WS* (rule_helper ';'WS*)* WS*'}' WS*;
+
+asjkdhasd : (A | AA)*;
+
+A : 'Var';
+AA : 'Vara';
 
 LETTER: 'A'..'Z' | 'a'..'z';
 DIGIT: '0'..'9';
 PLUS: '+';
 FACTOR: '*';
 QWE: '/' | '\\';
+COMMA: ',';
+COLON: ':';
+SEMICOLON: ';';
 
 OR : '|';
-CLOSURE: '*';
 WS: [ \n\t\r];
 

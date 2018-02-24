@@ -53,12 +53,6 @@ public interface GrammarVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitRule_helper(GrammarParser.Rule_helperContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link GrammarParser#repeat_amount}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitRepeat_amount(GrammarParser.Repeat_amountContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link GrammarParser#parse_rule}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

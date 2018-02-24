@@ -6,4 +6,9 @@ public class TerminalResultTree implements ResultTree {
     public TerminalResultTree(String tokenValue) {
         this.value = tokenValue;
     }
+
+    @Override
+    public String toString() {
+        return this.value;
+    }
 }
