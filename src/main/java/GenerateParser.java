@@ -37,26 +37,30 @@ public class GenerateParser {
             "    }\n" +
             "}\n";
     private static final String myParser = "import java.io.IOException;\n" +
-            "\n" +
+            "%s\n\n" +
             "public class MyGrammarParser extends Parser {\n" +
             "    public static final String GRAMMAR_PATH = \"%s\";\n" +
             "\n" +
             "    public MyGrammarParser(MyGrammarLexer lexer) throws IOException {\n" +
             "        super(lexer, InputGrammar.getParser(GRAMMAR_PATH));\n" +
+            "        %s\n" +
             "    }\n" +
+            "%s\n" +
+            "%s\n" +
             "}\n";
 
     private void generateLexerInit(Path grammarLexer) throws FileNotFoundException {
-        generate(grammarLexer, myLexer, "MyGrammarLexer.java");
+        generate(grammarLexer, myLexer, "MyGrammarLexer.java", grammarLexer.resolve("grammar"));
     }
 
     private void generateParserInit(Path grammarParser) throws FileNotFoundException {
-        generate(grammarParser, myParser, "MyGrammarParser.java");
+        generate(grammarParser, myParser, "MyGrammarParser.java", grammar.getHeader(),
+                grammarParser.resolve("grammar"), grammar.addCodeBlocksMethods(), grammar.getMember(), grammar.getCodeBlocksMethods());
     }
 
-    private void generate(Path grammarParser, String pattern, String outputName) throws FileNotFoundException {
+    private void generate(Path grammarParser, String pattern, String outputName, Object... args) throws FileNotFoundException {
         try (PrintWriter writer = new PrintWriter(grammarParser.resolve(outputName).toFile())){
-            writer.print(String.format(pattern, grammarParser.resolve("grammar")));
+            writer.print(String.format(pattern, args));
         }
 
     }

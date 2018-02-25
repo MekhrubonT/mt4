@@ -18,8 +18,35 @@ public interface GrammarListener extends ParseTreeListener {
 	 */
 	void exitInput_grammar(GrammarParser.Input_grammarContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link GrammarParser#rule_name}.
-	 * @param ctx the parse tree
+     * Enter a parse tree produced by {@link GrammarParser#header}.
+     * @param ctx the parse tree
+     */
+    void enterHeader(GrammarParser.HeaderContext ctx);
+
+    /**
+     * Exit a parse tree produced by {@link GrammarParser#header}.
+     *
+     * @param ctx the parse tree
+     */
+    void exitHeader(GrammarParser.HeaderContext ctx);
+
+    /**
+     * Enter a parse tree produced by {@link GrammarParser#codes}.
+     *
+     * @param ctx the parse tree
+     */
+    void enterCodes(GrammarParser.CodesContext ctx);
+
+    /**
+     * Exit a parse tree produced by {@link GrammarParser#codes}.
+     *
+     * @param ctx the parse tree
+     */
+    void exitCodes(GrammarParser.CodesContext ctx);
+
+    /**
+     * Enter a parse tree produced by {@link GrammarParser#rule_name}.
+     * @param ctx the parse tree
 	 */
 	void enterRule_name(GrammarParser.Rule_nameContext ctx);
 	/**
@@ -57,7 +84,22 @@ public interface GrammarListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitUnit(GrammarParser.UnitContext ctx);
-	/**
+
+    /**
+     * Enter a parse tree produced by {@link GrammarParser#regexText}.
+     *
+     * @param ctx the parse tree
+     */
+    void enterRegexText(GrammarParser.RegexTextContext ctx);
+
+    /**
+     * Exit a parse tree produced by {@link GrammarParser#regexText}.
+     *
+     * @param ctx the parse tree
+     */
+    void exitRegexText(GrammarParser.RegexTextContext ctx);
+
+    /**
 	 * Enter a parse tree produced by {@link GrammarParser#text}.
 	 * @param ctx the parse tree
 	 */
@@ -75,9 +117,38 @@ public interface GrammarListener extends ParseTreeListener {
 	/**
 	 * Exit a parse tree produced by {@link GrammarParser#rule_helper}.
 	 * @param ctx the parse tree
-	 */
-	void exitRule_helper(GrammarParser.Rule_helperContext ctx);
-	/**
+     */
+    void exitRule_helper(GrammarParser.Rule_helperContext ctx);
+
+    /**
+     * Enter a parse tree produced by {@link GrammarParser#code_block}.
+     *
+     * @param ctx the parse tree
+     */
+    void enterCode_block(GrammarParser.Code_blockContext ctx);
+
+    /**
+     * Exit a parse tree produced by {@link GrammarParser#code_block}.
+     *
+     * @param ctx the parse tree
+     */
+    void exitCode_block(GrammarParser.Code_blockContext ctx);
+
+    /**
+     * Enter a parse tree produced by {@link GrammarParser#code}.
+     *
+     * @param ctx the parse tree
+     */
+    void enterCode(GrammarParser.CodeContext ctx);
+
+    /**
+     * Exit a parse tree produced by {@link GrammarParser#code}.
+     *
+     * @param ctx the parse tree
+     */
+    void exitCode(GrammarParser.CodeContext ctx);
+
+    /**
 	 * Enter a parse tree produced by {@link GrammarParser#parse_rule}.
 	 * @param ctx the parse tree
 	 */

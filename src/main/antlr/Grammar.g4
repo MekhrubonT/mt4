@@ -1,19 +1,31 @@
 grammar Grammar;
 
 
-input_grammar: lexer_rule+ parse_rule+ EOF;
+input_grammar: header codes lexer_rule+ parse_rule+ EOF;
 
-rule_name: LETTER+;
+header: (WS* 'parser' ':' 'header' WS* '{' text '}' WS*)?;
+codes: (WS* 'parser' ':' 'member' WS* '{' text '}' WS*)?;
 
-lexer_rule: rule_name WS* '->' WS* '\'' regexp '\'' SEMICOLON WS*;
+rule_name: LETTER ('_' | LETTER)*;
+
+lexer_rule: rule_name WS* '->' WS* '\'' regexp '\'' SEMICOLON WS* code_block? WS*;
 
 regexp: unit* ('|' unit*)*;
 
-unit: (text | '(' regexp ')');
+unit: (regexText | '(' regexp ')');
 
-text: (LETTER | DIGIT | PLUS | FACTOR | QWE | COMMA | COLON | SEMICOLON)+;
 
-rule_helper: (rule_name WS*)*;
+regexText: (LETTER | DIGIT | PLUS | FACTOR | QWE | COMMA | COLON | SEMICOLON | DOT | WS | '(' | ')' | '{' | '}'
+| '"' | '=' | '<' | '>' | '!' | '^' | '_' | '?' | '-' | '&' | '$' | '.' | '[' | ']')+;
+
+text: (LETTER | DIGIT | PLUS | FACTOR | QWE | COMMA | COLON | SEMICOLON | DOT | WS | '(' | ')' | '{' text '}'
+| '"' | '=' | '<' | '>' | '!' | '^' | '_' | '?' | '\'' | '-' | '&' | '[' | ']')+;
+
+rule_helper: (code_block* WS* rule_name WS* code_block* WS*)*;
+
+code_block: '{' code '}';
+
+code: text*;
 
 
 parse_rule: rule_name WS* '{' WS* (rule_helper ';'WS*)* WS*'}' WS*;
@@ -26,6 +38,7 @@ QWE: '/' | '\\';
 COMMA: ',';
 COLON: ':';
 SEMICOLON: ';';
+DOT: '.';
 
 OR : '|';
 WS: [ \n\t\r];

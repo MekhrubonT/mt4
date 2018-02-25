@@ -1,0 +1,209 @@
+parser:header {
+import java.io.*;
+import java.util.Set;
+import java.util.HashSet;
+}
+
+
+parser:member {
+public PrintWriter pw = new PrintWriter(System.out);
+String buf;
+
+public void setWriter(PrintWriter pw) {
+    this.pw = pw;
+}
+
+void checkIfNotContains(Set<String> set, String s) {
+    if (!set.add(s)) {
+        //notifyErrorListeners("Double repeating of " + s);
+    }
+}
+
+String findTag(String s) {
+    switch(s) {
+        case "^": return "sup";
+        case "_": return "sub";
+        case "td": return "td";
+        default: return "i";
+    }
+}
+void printTag(String s, boolean closing) {
+    printTag(s, closing, false);
+}
+void printTag(String s, boolean closing, boolean moved) {
+    pw.print("<" + (closing ? "/" : "") + findTag(s));
+    if (moved)
+        pw.print(" style='position: relative; left: -.5em;'");
+    pw.print(">");
+}
+
+void printTexWord(String s) {
+    printTag("", false);
+    pw.print(s);
+    printTag("", true);
+}
+
+void latexNoBlockKeywoards(String s) {
+    printTag("td", false);
+    pw.print("&" + s + ";");
+    printTag("td", true);
+}
+
+void startFractionTable() {
+    pw.print("<table> <tbody> <tr> </tr> <td style=\"border-bottom:solid 1px\">");
+}
+void openSecondRow() {
+    pw.print("</td> <tr> <td>");
+}
+void closeTable() {
+    pw.print("</tr> </tbody> </table>");
+}
+
+String val = "";
+String reset() {
+    String old = val;
+    val = "";
+    return old;
+}
+void append(String val) {
+    this.val += val;
+}
+
+}
+
+
+MINUS -> '-'; {setResult("minus");}
+LBRACES -> '\{';
+RBRACES -> '\}';
+SUB -> '_';
+SUP -> '\^';
+DOLLAR -> '\$';
+KEYWORD -> '\\';
+
+L -> 'lt';
+G -> 'gt';
+LE -> 'le';
+GT -> 'ge';
+PLUS -> '\+'; {setResult("plus");}
+DIVIDE -> '/'; {setResult("divide");}
+TIMES -> 'times';
+PM -> 'pm';
+MP -> 'mp';
+SUM -> 'sum';
+PROD -> 'prod';
+ASYMP-> 'asymp';
+SDOT-> 'sdot';
+SQRT-> 'sqrt';
+FRAC -> 'frac';
+
+SYMB -> '=';
+DIGIT -> '[0-9]';
+LETTER -> '[a-zA-Z]';
+
+WS -> '\s';
+
+ndollar {
+    MINUS ; LBRACES ; RBRACES ; SUB ; SUP ; KEYWORD ;
+    L ; G ; LE ; GT ; PLUS ; DIVIDE ; TIMES ; PM ; MP ; SUM ; PROD ; ASYMP ; SDOT ; SQRT ; FRAC ; SYMB ; DIGIT ; LETTER ; WS;
+}
+
+main {
+    s;
+}
+
+s {
+    text_mode;
+}
+
+text_word {
+    ndollar {append((String)getResult());} text_wordp {setResult(reset());};
+}
+
+text_wordp {
+    ndollar {append((String)getResult());} text_wordp;
+    ;
+}
+
+no_tex_key_symb {
+    MINUS ;
+    L ; G ; LE ; GT ; PLUS ; DIVIDE ; TIMES ; PM ; MP ; SUM ; PROD ; ASYMP ; SDOT ; SQRT ; FRAC ; SYMB ; DIGIT ; LETTER ; WS;
+}
+
+no_tex_key_word {
+    no_tex_key_symb {append((String)getResult());} no_tex_key_wordp {setResult(reset());};
+}
+no_tex_key_wordp {
+    no_tex_key_symb {append((String)getResult());} no_tex_key_wordp;
+    ;
+}
+
+tex_math {
+    PLUS ; MINUS ; DIVIDE;
+}
+
+tex_word {
+    tex_word_single tex_wordp;
+}
+tex_wordp {
+    tex_word_single tex_wordp;
+    ;
+}
+tex_word_single {
+    KEYWORD tex_keyword;
+    tex_math {latexNoBlockKeywoards((String)getResult());};
+    no_tex_key_word {printTexWord((String)getResult());};
+}
+
+
+operation {
+    LE ;
+    GT ; L ; G ; TIMES ; MP; PM ; ASYMP ; SUM ; PROD ; SDOT;
+}
+
+tex_keyword {
+        operation {latexNoBlockKeywoards((String)getResult());};
+        SQRT block;
+        FRAC {startFractionTable();} block {openSecondRow();}  block {closeTable();};
+}
+
+
+
+text_mode {
+    text_mode_s text_mode;
+    ;
+}
+
+text_mode_s {
+    text_word {pw.print((String)getResult());};
+    DOLLAR {prepareArguments(new HashSet<String>());} tex_mode DOLLAR;
+}
+
+tex_mode {
+    {int x = 7; prepareArguments(args);} tex_mode_s {int x = 6; prepareArguments(args);} tex_mode;
+    ;
+}
+tex_mode_s {
+    {int x = 5;
+    prepareArguments(args);} one_off_blocks;
+    tex_word {((Set<String>)args[0]).clear();};
+}
+
+suporsub {
+    SUP;
+    SUB;
+}
+
+one_off_blocks {
+        suporsub {
+                                                        Set<String> blocks = (Set<String>)args[0];
+                                                        buf = (String)getResult();
+                                                        boolean moved = !blocks.isEmpty();
+                                                        checkIfNotContains(blocks, buf);
+//                                                      System.out.println(blocks.size());
+                                                      printTag(buf, false, moved);} block {printTag(buf, true, false);};
+}
+
+block {
+    LBRACES {prepareArguments(new HashSet<String>()); } tex_mode RBRACES;
+    no_tex_key_symb {pw.print((String)getResult());};
+}

@@ -17,8 +17,23 @@ public interface GrammarVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitInput_grammar(GrammarParser.Input_grammarContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link GrammarParser#rule_name}.
-	 * @param ctx the parse tree
+     * Visit a parse tree produced by {@link GrammarParser#header}.
+     * @param ctx the parse tree
+     * @return the visitor result
+     */
+    T visitHeader(GrammarParser.HeaderContext ctx);
+
+    /**
+     * Visit a parse tree produced by {@link GrammarParser#codes}.
+     *
+     * @param ctx the parse tree
+     * @return the visitor result
+     */
+    T visitCodes(GrammarParser.CodesContext ctx);
+
+    /**
+     * Visit a parse tree produced by {@link GrammarParser#rule_name}.
+     * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitRule_name(GrammarParser.Rule_nameContext ctx);
@@ -40,7 +55,16 @@ public interface GrammarVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitUnit(GrammarParser.UnitContext ctx);
-	/**
+
+    /**
+     * Visit a parse tree produced by {@link GrammarParser#regexText}.
+     *
+     * @param ctx the parse tree
+     * @return the visitor result
+     */
+    T visitRegexText(GrammarParser.RegexTextContext ctx);
+
+    /**
 	 * Visit a parse tree produced by {@link GrammarParser#text}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -52,7 +76,24 @@ public interface GrammarVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitRule_helper(GrammarParser.Rule_helperContext ctx);
-	/**
+
+    /**
+     * Visit a parse tree produced by {@link GrammarParser#code_block}.
+     *
+     * @param ctx the parse tree
+     * @return the visitor result
+     */
+    T visitCode_block(GrammarParser.Code_blockContext ctx);
+
+    /**
+     * Visit a parse tree produced by {@link GrammarParser#code}.
+     *
+     * @param ctx the parse tree
+     * @return the visitor result
+     */
+    T visitCode(GrammarParser.CodeContext ctx);
+
+    /**
 	 * Visit a parse tree produced by {@link GrammarParser#parse_rule}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
